@@ -1,0 +1,21 @@
+name: Syntax and package checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for folder in ('plugin', 'scripts', 'tests'):
+              for path in Path(folder).rglob('*.py'):
+                  compile(path.read_text(), str(path), 'exec')
+          for path in ('plugin/plugin.yaml', 'skill/SKILL.md', 'skill/LICENSE'):
+              assert Path(path).is_file(), path
+          print('Syntax/package checks only; native integration runs separately.')
+          PY

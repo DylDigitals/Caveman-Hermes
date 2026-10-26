@@ -1,0 +1,13 @@
+Caveman
+Copyright 2026 Julius Brussee
+
+Before Caveman 3.0.0, the parts of this repository outside the Engine-linked
+runtime were licensed under the MIT License. Contributions made to those
+parts before 3.0.0 were received under the MIT License and remain available
+under it. Its copyright and permission notice is retained in LICENSE-MIT.
+
+This package includes adapted Caveman writing guidance from
+JuliusBrussee/caveman, revision d262ab3882952a59312ff3537cd86d894523c5ab.
+The Hermes communication binding, native plugin, installer, and integration
+documentation are additions. The adapter is not an official Caveman or
+Hermes release and does not include Caveman's engine, browser, or fonts.
