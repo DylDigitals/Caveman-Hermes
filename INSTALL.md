@@ -1,63 +1,79 @@
-# Install the Hermes communication adapter
+# Install into Hermes
 
-The package is licensed under Apache-2.0 with upstream notices preserved. No GitHub account is required to download the public repository.
+## 1. Choose a profile
 
-Clone the repository, then run the commands below from its root:
+Use an existing, configured Hermes installation with the [supported integration interfaces](docs/VERIFICATION.md). The installer needs Python 3.10 or later and a `hermes` executable; it installs no dependencies.
+
+On Linux/macOS, the default profile is `$HOME/.hermes`; a named profile is `$HOME/.hermes/profiles/<name>`. See [Hermes profiles](https://hermes-agent.nousresearch.com/docs/user-guide/profiles) for host-specific paths. Pass the exact home directory to the installer; do not use the Hermes application/source directory.
+
+The examples below use an existing profile named `coder`. Do not run installation while another process is editing that profile's configuration.
+
+## 2. Download and preflight
 
 ```bash
 git clone https://github.com/DylDigitals/Caveman-Hermes.git
 cd Caveman-Hermes
+python3 scripts/install.py --home "$HOME/.hermes/profiles/coder"
 ```
 
-For repeatable deployment, check out the exact commit you reviewed before installation. Never put a GitHub token in the clone URL.
+For repeatable deployment, check out the commit you reviewed before running the installer. Preflight prints the selected home, plugin, skill, and initial mode, then asks you to repeat with `--apply`. It does not copy adapter files or change configuration, although Hermes CLI may create ordinary cache files.
 
-## Requirements
+If Hermes is not on PATH, append `--hermes /absolute/path/to/hermes` to both installer commands. If preflight refuses an existing installation, follow the conflict section below instead of deleting files.
 
-- An existing Hermes installation and configured profile.
-- Python 3.10 or later for the installer; no additional installer packages.
-- Hermes with native `pre_llm_call`, `llm_request`, plugin commands, and `skills.auto_load` support. See [verified compatibility](docs/VERIFICATION.md).
-- No existing discoverable skill named `caveman` or plugin named `caveman-communication` in that profile. The installer refuses replacement rather than overwriting another installation.
-
-## Install
-
-Run from this package's root. Choose the exact profile home: `~/.hermes` for default, or `~/.hermes/profiles/<name>` for a named profile. Hermes documents these independent profile homes in its [profiles guide](https://hermes-agent.nousresearch.com/docs/user-guide/profiles).
+## 3. Apply
 
 ```bash
-# Example: an existing profile named coder.
-python3 scripts/install.py --home "$HOME/.hermes/profiles/coder"
-
-# After checking the printed destination:
 python3 scripts/install.py --home "$HOME/.hermes/profiles/coder" --apply
 ```
 
-The first command checks the destination without copying the adapter or changing its settings. Hermes itself may create normal diagnostic/cache files when its CLI runs. The second command:
+The installer copies `plugin/` to `plugins/caveman-communication/` and `skill/` to `skills/caveman/` inside that home. It adds `caveman` to the existing auto-load list, sets the initial profile mode, enables the plugin through Hermes, and reads the settings back. Other auto-loaded skills remain intact.
 
-1. Copies `plugin/` into the selected home's `plugins/caveman-communication/`.
-2. Copies the complete `skill/` package into `skills/caveman/`.
-3. Adds `caveman` to the existing `skills.auto_load` list, preserving other entries.
-4. Sets the communication mode and enables the plugin through native Hermes CLI commands, then reads the settings back.
+Expected final message: `Installed and configuration verified. Start a new Hermes process; check /caveman status.` This confirms files and settings, not activation in an already-running gateway.
 
-Use `--mode lite`, `--mode ultra`, a documented Wenyan mode, or `--mode off` to choose another initial mode. Use `--hermes /path/to/hermes` if the intended executable is not on `PATH`. The installer confirms that Hermes resolves the exact requested profile's config file.
+## 4. Activate and verify
 
-It does not change your provider, tools, permissions, gateway service, or Hermes application source. Do not run it while another process is editing that profile's configuration. Installation is not transactional: a failed apply can leave copied files or partial settings; inspect the reported target rather than rerunning with force.
+Start a new CLI process for the same profile:
 
-## Activate and check
-
-Start a new Hermes CLI process for that profile. An already-running gateway must be reloaded or restarted through its normal owner; the installer never does this automatically. For a gateway serving multiple profiles, coordinate that shared lifecycle explicitly.
-
-In the selected profile's chat:
-
-```text
-/caveman status
-/caveman lite
-/caveman off
-/caveman full
+```bash
+hermes -p coder chat
 ```
 
-Status should report the selected mode and `profile-wide`. A mode change applies to existing and new sessions on their next turn. Ask a normal question to check visible style; status proves configuration, not guaranteed model adherence.
+Enter `/caveman status`. It should report `full` and `profile-wide` after the default installation. If the command is unavailable, confirm you opened the selected profile and a new process. General Caveman usage belongs in the [upstream documentation](https://github.com/JuliusBrussee/caveman); this status check verifies the adapter installation.
 
-## Existing installations, upgrades, and removal
+For a messaging gateway, use its normal owner-managed restart/reload procedure after draining active work. A shared gateway may serve several profiles. The installer never restarts it, and this guide does not prescribe an unconditional service restart.
 
-If an upstream skill-only installation already supplies `caveman`, keep it intact. Review its owner and local changes before replacing it, or try this adapter in a separate profile. This fresh-install script deliberately has no force, automatic migration, upgrade, or deletion mode.
+## If Caveman is already installed
 
-To suspend the style, use `/caveman off`. To disable the plugin itself, use the native `hermes plugins disable caveman-communication` command with `HERMES_HOME` set to the same selected home. The auto-loaded writing skill is separate: remove only `caveman` from `skills.auto_load` through Hermes configuration management if retiring both components. Do not replace the entire list or delete user-modified skill files blindly.
+Automatic replacement, migration, and upgrades are not supported. Preflight rejects an existing plugin directory or any discoverable `caveman` skill, including a copy outside the profile's immediate skill directory. Inspect without changing anything:
+
+```bash
+hermes -p coder skills list
+hermes -p coder config get skills.external_dirs --json
+hermes -p coder config get skills.auto_load --json
+```
+
+The supported way to try the adapter without replacing that installation is a separate profile. Choose a new profile name, configure it, then preflight that exact home:
+
+```bash
+hermes profile create cavemandemo --no-skills
+hermes -p cavemandemo setup
+python3 scripts/install.py --home "$HOME/.hermes/profiles/cavemandemo"
+```
+
+If that preflight passes, repeat it with `--apply` and start `hermes -p cavemandemo chat`. These commands create a separate profile; they do not migrate existing settings or conversations. Do not remove a shared or locally modified skill just to satisfy preflight.
+
+## If apply fails partway through
+
+Apply is not transactional. Copied files or some settings may remain even when the command reports failure. Stop; do not rerun with force or delete the profile.
+
+Inspect the exact target's plugin list and settings:
+
+```bash
+hermes -p coder plugins list
+hermes -p coder config get plugins.entries.caveman-communication.settings.mode --json
+hermes -p coder config get skills.auto_load --json
+```
+
+If this attempt enabled the plugin and you want to prevent it loading in the next process, run `hermes -p coder plugins disable caveman-communication`. Disabling the plugin does not remove the separately auto-loaded writing skill or unload an existing process. Record what changed and resolve that specific failed command before retrying. Ask for help with the error and synthetic reproduction, never credentials or private transcripts.
+
+There is no automatic uninstall. Retiring both components requires disabling the plugin and removing only `caveman` from the existing auto-load list through Hermes configuration management. Preserve other entries and user-modified files. See [SECURITY.md](SECURITY.md) for sensitive reports.

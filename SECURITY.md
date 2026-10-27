@@ -1,7 +1,5 @@
-# Security
+# Report a vulnerability
 
-The plugin can inspect outgoing model requests and modify their instruction fields. Install only reviewed code from a trusted revision. The installer requires an explicit Hermes profile home and refuses automatic replacement of existing copies.
+Use [GitHub private vulnerability reporting](https://github.com/DylDigitals/Caveman-Hermes/security/advisories/new). Include the affected commit and a minimal reproduction with synthetic data. Never put credentials, private prompts, transcripts, or exploit details in a public issue.
 
-Report vulnerabilities through [GitHub private vulnerability reporting](https://github.com/DylDigitals/Caveman-Hermes/security/advisories/new). Never post credentials, session transcripts, private request payloads, or exploit details in a public issue. Include the affected commit and a minimal reproduction with synthetic data.
-
-The installer does not restart services or modify Hermes core. Its apply step is not transactional; a failed configuration command may leave copied files or partial settings. Inspect the target before recovery. Existing-file replacement, upgrades, and removal are not automated.
+The plugin can inspect outgoing model requests and add instruction text. Install only reviewed code from a trusted revision. For installation conflicts and partial failures, follow [INSTALL.md](INSTALL.md); do not force an overwrite or delete a profile to recover.

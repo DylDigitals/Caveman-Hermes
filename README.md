@@ -1,41 +1,50 @@
-# Caveman Hermes
+# Caveman for Hermes
 
-A standalone adapter that brings [Caveman](https://github.com/JuliusBrussee/caveman)'s communication guidance to [Hermes Agent](https://github.com/NousResearch/hermes-agent) through native hooks and request middleware. This is not a fork of Caveman or Hermes.
+## Why this adapter exists
 
-## What it does
+Caveman's Hermes integration is not built the same way as its Claude Code integration. Claude Code uses lifecycle hooks for automatic activation and ongoing reinforcement; Caveman's Hermes skill-installation path copies the skills without installing those same hooks.[7][8]
 
-- Loads the full Caveman writing skill through native Hermes skill resolution.
-- Reinforces the active profile's communication mode before each turn.
-- Restores missing rules on qualified model requests without rewriting responses or invoking another model.
-- Honors global/platform skill disablement and keeps trusted project overrides within their native lookup scope.
+This adapter brings that activation and reinforcement pattern to native Hermes conversations. The shared reason is simple: keep the writing guidance available throughout a conversation without repeatedly asking the assistant to load it. This comparison concerns the skill-installation path, not every Caveman CLI or gateway integration.
 
-Plugin version: **1.1.1**. The adapter changes communication guidance, not tools, permissions, model routing, or task execution. Instruction delivery cannot guarantee model adherence or token savings.
+The base Caveman writing rules are retained, with a separate Hermes binding appended. For Caveman usage and examples, read the **[upstream Caveman documentation](https://github.com/JuliusBrussee/caveman)**. This repository documents the Hermes adaptation only.
 
-## Layout
+## Project layout
 
 ```text
-plugin/     Native Hermes plugin and manifest
-skill/      Complete writing rules, upstream license, integration notes
-tests/      Native integration and isolated installer tests
-scripts/    Explicit-target installer (preflight by default)
-docs/       Integration explanation, verification, and contribution notes
+Caveman-Hermes/
+├── README.md
+├── INSTALL.md                    Install, activate, and handle conflicts
+├── CONTRIBUTING.md               Change, test, and submit the adapter
+├── CHANGELOG.md
+├── SECURITY.md
+├── LICENSING.md
+├── LICENSE / LICENSE-MIT / NOTICE
+├── AGENTS.md                     Brief contributor boundaries
+├── .gitignore
+├── plugin/
+│   ├── __init__.py               Hooks, request recovery, profile commands
+│   ├── plugin.yaml               Native plugin registration
+│   └── LICENSE
+├── skill/
+│   ├── SKILL.md                  Caveman rules + Hermes binding
+│   ├── README.md                 Portable documentation links
+│   └── LICENSE / LICENSE-MIT / NOTICE
+├── scripts/
+│   └── install.py                Explicit-profile installer
+├── tests/
+│   ├── test_communication.py
+│   └── test_install.py
+├── docs/
+│   └── VERIFICATION.md           Tested baseline and compatibility limits
+└── .github/workflows/
+    └── checks.yml                Syntax and package checks
 ```
 
-Repository development does not automatically update installed profiles. Installation and gateway activation are separate steps.
+Hermes integrates one skill, `caveman`, and one plugin, `caveman-communication`. The installer copies the complete `skill/` and `plugin/` directories into the selected profile; separate Ultra/Wenyan skill packages are not required by this adapter.
 
-## Modes
+## Installation
 
-`/caveman` and `/caveman status` report state. Explicit `/caveman <mode>` changes the whole active profile, including its other sessions.
-
-Available modes: `full`, `lite`, `ultra`, `wenyan-lite`, `wenyan-full`, `wenyan-ultra`, and `off`. Legacy `manual` is inactive. `/ultracave` selects `ultra`; `/megacave` selects `wenyan-full`.
-
-This implements the startup-rule and per-prompt-reinforcement pattern, not complete Claude Code plugin parity. Profile-wide modes, local Ultra/Wenyan definitions, and native Hermes usage reporting are deliberate differences. It does not import per-session mode files, project-local Caveman mode settings, one-shot workflow restoration, or SessionEnd statistics.
-
-## Install
-
-Apache-2.0 licensed, with upstream notices preserved. This is an independent community adapter, not an official Caveman or Hermes release.
-
-Clone the repository, then select an existing Hermes profile:
+For an existing configured profile named `coder`:
 
 ```bash
 git clone https://github.com/DylDigitals/Caveman-Hermes.git
@@ -44,27 +53,32 @@ python3 scripts/install.py --home "$HOME/.hermes/profiles/coder"
 python3 scripts/install.py --home "$HOME/.hermes/profiles/coder" --apply
 ```
 
-The first command checks the target. The second installs the native plugin and complete skill, preserves existing auto-loaded skills, enables the adapter, and verifies configuration. Existing copies are refused, not overwritten. No core edits, network downloads, or gateway restart are performed.
+The first command after cloning is a preflight; `--apply` installs. Follow **[INSTALL.md](INSTALL.md)** to select another profile, activate the plugin, or handle an existing Caveman installation. The installer does not restart Hermes or modify its core.
 
-Read [INSTALL.md](INSTALL.md) for requirements, activation, existing-installation handling, and removal boundaries. Read [what we added](docs/HERMES-INTEGRATION.md) for the Claude Code lifecycle comparison and official Hermes documentation.
+## What we restored, and where
 
-## Verify
+- **Conversation startup:** `skills.auto_load` supplies the complete writing rules.
+- **Before each turn:** the plugin's `pre_llm_call` hook supplies the active mode reminder.
+- **Before supported model requests:** `llm_request` restores missing guidance, including requests whose context no longer contains it.
+- **Across conversations in a profile:** the plugin reads one persistent profile setting, keeping existing and new conversations aligned on their next turn.
 
-Use an existing compatible Hermes environment. The plugin has no independent third-party runtime dependencies; native tests also use PyYAML supplied by that environment.
+Hermes profiles and skills provide the configuration and instruction layer.[3][4]
 
-```bash
-export HERMES_SOURCE=/absolute/path/to/hermes-agent
-export HERMES_PYTHON=/absolute/path/to/hermes-python
-export HERMES_EXECUTABLE=/absolute/path/to/hermes
-export HERMES_HOME="$(mktemp -d)"
-PYTHONPATH="$HERMES_SOURCE" PYTHONDONTWRITEBYTECODE=1 \
-  "$HERMES_PYTHON" -m unittest discover -s tests -v
-"$HERMES_PYTHON" "$HERMES_SOURCE/hermes_cli/main.py" plugins doctor plugin --ci
-"$HERMES_PYTHON" "$HERMES_SOURCE/hermes_cli/main.py" plugins validate plugin --json
-```
+Native plugin hooks and request middleware supply the integration points.[5][6]
 
-Tests create disposable profile homes. Set `HERMES_EXECUTABLE` or the three installer tests are explicitly skipped. These checks do not run provider inference. CI performs syntax and package-presence checks only, not native-host integration or paid inference.
+### Hermes-specific differences
 
-Request recovery currently accepts only explicit `chat_completions` and `codex_responses` API modes. Other native payloads are left unchanged; startup loading and the pre-turn reminder remain independent. The one-entry body cache reloads when native project lookup scope changes; same-scope file changes require a plugin reload. Alternating scopes can cause extra reads.
+Settings are profile-wide rather than Claude-style session-local. Bare mode/status commands are observational; persistent changes require an explicit mode command. Ultra/Wenyan definitions are local adaptations. Claude's statusline, session-end statistics, natural-language persistence, and one-shot restoration are not ported.
 
-See [verification](docs/VERIFICATION.md), [licensing and attribution](LICENSING.md), and [the integration explanation](docs/HERMES-INTEGRATION.md).
+Request recovery supports `chat_completions` and `codex_responses`; other formats are unchanged. See the [tested baseline and limits](docs/VERIFICATION.md). Delivering instructions does not guarantee model adherence or token savings.
+
+Independent community adapter, version **1.1.1**. [Apache-2.0 with upstream notices](LICENSING.md); no Caveman or Hermes endorsement is implied.
+
+## Sources
+
+[3] https://hermes-agent.nousresearch.com/docs/user-guide/profiles
+[4] https://hermes-agent.nousresearch.com/docs/user-guide/features/skills
+[5] https://hermes-agent.nousresearch.com/docs/developer-guide/plugins
+[6] https://hermes-agent.nousresearch.com/docs/developer-guide/middleware
+[7] https://github.com/JuliusBrussee/caveman/blob/9b68f7ed12b05e7efaff18e65c5a3fc2849fd0a4/.claude-plugin/plugin.json
+[8] https://github.com/JuliusBrussee/caveman/blob/9b68f7ed12b05e7efaff18e65c5a3fc2849fd0a4/installer/install.js

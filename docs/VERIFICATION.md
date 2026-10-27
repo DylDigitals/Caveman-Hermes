@@ -1,16 +1,22 @@
-# Verification
+# Tested compatibility
 
-## Installer and release preparation
+Adapter version: **1.1.1**.
 
-The package was tested with Python 3.11 against an unmodified Git archive of the public Hermes commit `614f11d3f6a0eddc381f05f5c4dd759d0f752be4`. Its upstream existence was confirmed through the GitHub API. The run reused an existing Hermes dependency environment; it was not a fresh dependency installation or a claim of compatibility with every Hermes release.
+## Recorded baseline
 
-Executed from the standalone package:
+The release checks passed with Python 3.11 and an unmodified archive of [Hermes commit `614f11d3`](https://github.com/NousResearch/hermes-agent/commit/614f11d3f6a0eddc381f05f5c4dd759d0f752be4), using an existing dependency environment rather than a fresh dependency installation:
 
-- Native integration plus installer suite: **10 tests passed** (7 communication tests and 3 installer tests).
-- Plugin Doctor: passed discovery, parsing, import, and registration.
-- Manifest validation: passed, including declared middleware and security scan.
-- Installer checks: preflight leaves target configuration and adapter files untouched; apply preserves unrelated settings; paths with spaces work; existing copies, duplicate native skill names, and symlinked installation boundaries are refused.
+- 7 communication tests and 3 installer tests passed.
+- Native Plugin Doctor and manifest validation passed.
+- An anonymous checkout of the published adapter also passed the 10 tests with the available local Hermes environment.
 
-The same 10 tests also passed against the current, modified local Hermes host. No inference credentials, paid provider requests, live profile installation, gateway restart, or base-Hermes edits were used for these checks. Synthetic request restoration is tested; actual model-driven compaction and universal model adherence are not certified.
+This is one tested source baseline, not a minimum-version claim. Run the [contributor checks](../CONTRIBUTING.md#3-check-it) against the Hermes version you intend to support. CI alone checks syntax/package presence, not native behavior.
 
-The installer supports fresh installation only. No force-overwrite, automatic upgrade, migration, or removal flow is claimed. Apache-2.0 licensing and applicable upstream notices are included. These checks qualify the stated boundaries, not every Hermes version or model.
+## Limits
+
+- Request recovery accepts only `chat_completions` and `codex_responses`. Other payload formats remain unchanged.
+- Skill disablement is checked per request. Cached skill content reloads when trusted-project lookup scope changes; changing the body within the same scope requires a plugin reload.
+- The installer supports fresh installs, not automatic migration, upgrades, or removal.
+- Tests cover synthetic tool-loop and missing-context requests. They do not certify real model-driven compaction, every gateway, every OS, model adherence, or token savings.
+
+No provider credentials are needed for the documented native checks.

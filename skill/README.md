@@ -1,5 +1,7 @@
-# Caveman writing skill
+# Installed Caveman skill
 
-[SKILL.md](SKILL.md) contains the complete upstream base writing rules and the Hermes communication binding. [LICENSE](LICENSE) preserves the upstream Apache-2.0 license.
+[SKILL.md](SKILL.md) is the runtime instruction payload: the upstream base writing rules followed by the Hermes-specific binding. Keep it with the license and notice files in this directory.
 
-The native adapter lives in [../plugin/](../plugin/). See the [repository README](../README.md) for installation boundaries and [integration notes](references/hermes-integration.md) for the hook contract.
+- [Caveman usage and examples](https://github.com/JuliusBrussee/caveman)
+- [Hermes adapter explanation](https://github.com/DylDigitals/Caveman-Hermes)
+- [Adapter installation](https://github.com/DylDigitals/Caveman-Hermes/blob/main/INSTALL.md)
