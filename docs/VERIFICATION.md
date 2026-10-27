@@ -13,4 +13,4 @@ Executed from the standalone package:
 
 The same 10 tests also passed against the current, modified local Hermes host. No inference credentials, paid provider requests, live profile installation, gateway restart, or base-Hermes edits were used for these checks. Synthetic request restoration is tested; actual model-driven compaction and universal model adherence are not certified.
 
-The installer supports fresh installation only. No force-overwrite, automatic upgrade, migration, or removal flow is claimed. Apache-2.0 licensing and applicable upstream notices are included. Public distribution remains pending.
+The installer supports fresh installation only. No force-overwrite, automatic upgrade, migration, or removal flow is claimed. Apache-2.0 licensing and applicable upstream notices are included. These checks qualify the stated boundaries, not every Hermes version or model.

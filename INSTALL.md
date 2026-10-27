@@ -1,8 +1,8 @@
 # Install the Hermes communication adapter
 
-This is a private pre-launch repository. Access requires authorization to `DylDigitals/Caveman-Hermes`; it is not yet an anonymous public download. The package is licensed under Apache-2.0 with upstream notices preserved.
+The package is licensed under Apache-2.0 with upstream notices preserved. No GitHub account is required to download the public repository.
 
-Clone the repository with an account that has access, then run the commands below from its root:
+Clone the repository, then run the commands below from its root:
 
 ```bash
 git clone https://github.com/DylDigitals/Caveman-Hermes.git

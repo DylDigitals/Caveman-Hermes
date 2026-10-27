@@ -33,11 +33,13 @@ This implements the startup-rule and per-prompt-reinforcement pattern, not compl
 
 ## Install
 
-**Private pre-launch repository:** the package uses Apache-2.0 with upstream notices preserved. Public availability and upstream endorsement are not claimed.
+Apache-2.0 licensed, with upstream notices preserved. This is an independent community adapter, not an official Caveman or Hermes release.
 
-From a reviewed package directory, select an existing Hermes profile:
+Clone the repository, then select an existing Hermes profile:
 
 ```bash
+git clone https://github.com/DylDigitals/Caveman-Hermes.git
+cd Caveman-Hermes
 python3 scripts/install.py --home "$HOME/.hermes/profiles/coder"
 python3 scripts/install.py --home "$HOME/.hermes/profiles/coder" --apply
 ```
